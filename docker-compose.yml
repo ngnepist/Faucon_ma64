@@ -1,13 +1,13 @@
-x-srbc-sim-base: &faucon-sim-base
-  image: faucon_simulator
+x-faucon-sim-base: &faucon-sim-base
+  image: ghcr.io/ngnepist/faucon_ws/faucon_simulator
   network_mode: host
   environment:
     - DISPLAY=${DISPLAY:-}
     - QT_X11_NO_MITSHM=1
-    - GZ_SIM_RESOURCE_PATH=/faucon_ws/install/faucon_description/share:/faucon_ws/install/faucon_description/share/faucon_description:${GZ_SIM_RESOURCE_PATH:-}
+    - GZ_SIM_RESOURCE_PATH=/Faucon_ma64/install/faucon_description/share:/Faucon_ma64/install/faucon_description/share/faucon_description:${GZ_SIM_RESOURCE_PATH:-}
   volumes:
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    - ./data:/faucon_ws/data
+    - ./data:/Faucon_ma64/data
   devices:
     - /dev/dri:/dev/dri
   stdin_open: true
@@ -20,56 +20,42 @@ services:
 # -----------------------------------------------------------------------------
 #                                   Simulateurs
 # -----------------------------------------------------------------------------
-  build-grpc-simulator:
-    image: registry.gitlab.com/sabi-agri/srbc_ros2/srbc_ws/grpc_simulator
-    build:
-      context: .
-      dockerfile: ./docker/grpc.dockerfile
-      
   build-image-simulator:
-    image: registry.gitlab.com/sabi-agri/srbc_ros2/srbc_ws/srbc_simulator
+    image: ghcr.io/ngnepist/faucon_ws/faucon_simulator
     build:
       context: .
       dockerfile: ./docker/simulator.dockerfile
 
-  srbc-grpc-sim:
-    <<: *srbc-sim-base
-    command: bash -c "ros2 launch srbc_bringup grpc.launch.py"
-    container_name: srbc_grpc_sim
+  faucon-rviz:
+    <<: *faucon-sim-base
+    command: bash -c "rviz2 -d /Faucon_ma64/install/faucon_config/share/faucon_config/config/sim/rviz/faucon_sim.rviz --ros-args -p use_sim_time:=true"
+    container_name: faucon_rviz_sim
 
-  srbc-rviz:
-    <<: *srbc-sim-base
-    command: bash -c "rviz2 -d /srbc_ws/install/srbc_config/share/srbc_config/config/sim/rviz/srbc_sim.rviz --ros-args -p use_sim_time:=true"
-    container_name: srbc_rviz_sim
+  faucon-gazebo:
+    <<: *faucon-sim-base
+    command: bash -c "ros2 launch faucon_bringup sim.launch.py"
+    container_name: faucon_gazebo_sim
     depends_on:
-      srbc-grpc-sim:
+      faucon-rviz:
         condition: service_started
 
-  srbc-gazebo:
-    <<: *srbc-sim-base
-    command: bash -c "ros2 launch srbc_bringup sim.launch.py"
-    container_name: srbc_gazebo_sim
-    depends_on:
-      srbc-rviz:
-        condition: service_started
-
-  srbc-teleop:
-    <<: *srbc-sim-base
+  faucon-teleop:
+    <<: *faucon-sim-base
     command: bash -c "ros2 run pynput_teleop default.bash"
-    container_name: srbc_teleop_sim
+    container_name: faucon_teleop_sim
 
-  srbc-loc-sim:
-    <<: *srbc-sim-base
-    command: bash -c "ros2 launch srbc_bringup gnss_to_odom.launch.py use_sim_time:=true"
-    container_name: srbc_loc_sim
+  faucon-loc-sim:
+    <<: *faucon-sim-base
+    command: bash -c "ros2 launch faucon_bringup gnss_to_odom.launch.py use_sim_time:=true"
+    container_name: faucon_loc_sim
     depends_on:
-      srbc-gazebo:
+      faucon-gazebo:
         condition: service_started
 
-  srbc-nav-sim:
-    <<: *srbc-sim-base
-    command: bash -c "ros2 launch srbc_bringup nav.launch.py"
-    container_name: srbc_nav_sim
+  faucon-nav-sim:
+    <<: *faucon-sim-base
+    command: bash -c "ros2 launch faucon_bringup nav.launch.py"
+    container_name: faucon_nav_sim
     depends_on:
-      srbc-loc-sim:
+      faucon-loc-sim:
         condition: service_started

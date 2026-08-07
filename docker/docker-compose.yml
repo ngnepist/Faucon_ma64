@@ -5,5 +5,5 @@ services:
     ipc: host
     network_mode: host
     volumes:
-      - ../src/common/faucon/faucon_config/config:/faucon_ws/install/faucon_config/share/faucon_config/config/
-      - ../src/common/faucon/faucon_bringup/launch:/faucon_ws/install/faucon_bringup/share/faucon_bringup/launch/
+      - ../src/common/faucon/faucon_config/config:/Faucon_ma64/install/faucon_config/share/faucon_config/config/
+      - ../src/common/faucon/faucon_bringup/launch:/Faucon_ma64/install/faucon_bringup/share/faucon_bringup/launch/
