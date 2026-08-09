@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>dependencies</name>
+  <version>0.0.0</version>
+  <description>Package containing all dependencies from workspace packages</description>
+  <maintainer email="sngnepiepayewembe@gmail.com">NGNEPIEPAYE WEMBE Stephane</maintainer>
+  <license>FAUCON</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>ament_cmake</depend>
+  <depend>ament_cmake_python</depend>
+  <depend>ament_lint_auto</depend>
+  <depend>ament_lint_common</depend>
+  <depend>controller_manager</depend>
+  <depend>faucon_control</depend>
+  <depend>faucon_ihm</depend>
+  <depend>faucon_perception</depend>
+  <depend>geometry_msgs</depend>
+  <depend>gz_ros2_control</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>python3-jinja2</depend>
+  <depend>python3-matplotlib</depend>
+  <depend>python3-opencv</depend>
+  <depend>python3-packaging</depend>
+  <depend>python3-rospkg</depend>
+  <depend>python3-shapely</depend>
+  <depend>python3-yaml</depend>
+  <depend>rclcpp</depend>
+  <depend>rclpy</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>ros2_control</depend>
+  <depend>ros2_controllers</depend>
+  <depend>ros2launch</depend>
+  <depend>ros_gz_bridge</depend>
+  <depend>ros_gz_image</depend>
+  <depend>ros_gz_sim</depend>
+  <depend>rviz2</depend>
+  <depend>std_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>twist_mux</depend>
+  <depend>virtual_maize_field</depend>
+  <depend>xacro</depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

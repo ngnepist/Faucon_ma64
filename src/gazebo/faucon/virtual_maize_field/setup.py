@@ -21,6 +21,7 @@ for folder_name in (
     "config",
     "launch",
     "models",
+    "worlds",
 ):
     _path_dict = {}
 

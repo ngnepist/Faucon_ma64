@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>faucon_bringup</name>
+  <name>faucon_config</name>
   <version>0.0.0</version>
-  <description>The faucon_bringup package</description>
+  <description>The faucon_config package</description>
   <maintainer email="sngnepiepayewembe@gmail.com">NGNEPIEPAYE WEMBE Stephane</maintainer>
   <license>FAUCON</license>
 
