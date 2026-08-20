@@ -39,6 +39,11 @@ services:
       faucon-rviz:
         condition: service_started
 
+  faucon-ihm:
+    <<: *faucon-sim-base
+    command: bash -c "ros2 launch faucon_bringup ihm.launch.py use_sim_time:=true"
+    container_name: faucon_ihm_sim
+
   faucon-teleop:
     <<: *faucon-sim-base
     command: bash -c "ros2 run pynput_teleop default.bash"

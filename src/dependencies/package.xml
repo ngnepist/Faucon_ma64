@@ -36,11 +36,14 @@
   <depend>ros_gz_bridge</depend>
   <depend>ros_gz_image</depend>
   <depend>ros_gz_sim</depend>
+  <depend>rosapi</depend>
+  <depend>rosbridge_server</depend>
   <depend>rviz2</depend>
   <depend>std_msgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>twist_mux</depend>
   <depend>virtual_maize_field</depend>
+  <depend>web_video_server</depend>
   <depend>xacro</depend>
   <export>
     <build_type>ament_cmake</build_type>

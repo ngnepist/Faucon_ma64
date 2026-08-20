@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     && colcon build \
     && rm -rf log/ build/ src/
 
+
 FROM ros:jazzy AS gazebo-ws-builder
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -20,6 +21,30 @@ RUN mkdir -p /Faucon_ma64/src
 COPY --from=common-ws-builder /Faucon_ma64 /Faucon_ma64
 WORKDIR /Faucon_ma64
 COPY src/gazebo src
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    python3-pip \
+    && rosdep install --from-paths src --ignore-src -r -y \
+    && . /opt/ros/$ROS_DISTRO/setup.sh \
+    && . /Faucon_ma64/install/setup.sh \
+    && colcon build \
+    && rm -rf log/ build/ src/
+
+
+FROM ros:jazzy AS ihm-ws-builder
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+RUN mkdir -p /Faucon_ma64/src
+COPY --from=common-ws-builder /Faucon_ma64 /Faucon_ma64
+WORKDIR /Faucon_ma64
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+COPY src/ihm src
+WORKDIR /Faucon_ma64/src/faucon/faucon_ihm/ihm
+RUN npm install && npm run build
+WORKDIR /Faucon_ma64
 RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-pip \
     && rosdep install --from-paths src --ignore-src -r -y \
@@ -45,6 +70,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     && colcon build \
     && rm -rf log/ build/ src/
 
+
 FROM ros:jazzy AS loc-ws-builder
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -61,6 +87,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     && colcon build \
     && rm -rf log/ build/ src/
 
+
 FROM ros:jazzy AS nav-ws-builder
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -76,6 +103,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     && . /Faucon_ma64/install/setup.sh \
     && colcon build \
     && rm -rf log/ build/ src/
+
 
 FROM ros:jazzy-ros-core
 
@@ -106,6 +134,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 COPY --from=common-ws-builder /Faucon_ma64 /Faucon_ma64
 COPY --from=gazebo-ws-builder /Faucon_ma64 /Faucon_ma64
+COPY --from=ihm-ws-builder /Faucon_ma64 /Faucon_ma64
 COPY --from=vehicle-ws-builder /Faucon_ma64 /Faucon_ma64
 COPY --from=loc-ws-builder /Faucon_ma64 /Faucon_ma64
 COPY --from=nav-ws-builder /Faucon_ma64 /Faucon_ma64
