@@ -28,8 +28,11 @@ services:
 
   faucon-rviz:
     <<: *faucon-sim-base
-    command: bash -c "rviz2 -d /Faucon_ma64/install/faucon_config/share/faucon_config/config/sim/rviz/faucon_sim.rviz --ros-args -p use_sim_time:=true"
+    command: bash -c "rviz2 -d /Faucon_ma64/install/faucon_config/share/faucon_config/config/viz/faucon_sim.rviz --ros-args -p use_sim_time:=true"
     container_name: faucon_rviz_sim
+    depends_on:
+      faucon-ihm:
+        condition: service_started
 
   faucon-gazebo:
     <<: *faucon-sim-base
@@ -44,6 +47,7 @@ services:
     command: bash -c "ros2 launch faucon_bringup ihm.launch.py use_sim_time:=true"
     container_name: faucon_ihm_sim
 
+
   faucon-teleop:
     <<: *faucon-sim-base
     command: bash -c "ros2 run pynput_teleop default.bash"
@@ -51,7 +55,7 @@ services:
 
   faucon-loc-sim:
     <<: *faucon-sim-base
-    command: bash -c "ros2 launch faucon_bringup gnss_to_odom.launch.py use_sim_time:=true"
+    command: bash -c "sleep 5 && ros2 launch faucon_bringup loc.launch.py use_sim_time:=true"
     container_name: faucon_loc_sim
     depends_on:
       faucon-gazebo:
@@ -59,8 +63,12 @@ services:
 
   faucon-nav-sim:
     <<: *faucon-sim-base
-    command: bash -c "ros2 launch faucon_bringup nav.launch.py"
+    command: bash -c "sleep 10 && ros2 launch faucon_bringup nav.launch.py"
     container_name: faucon_nav_sim
+    cap_add:
+    - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
     depends_on:
       faucon-loc-sim:
         condition: service_started
