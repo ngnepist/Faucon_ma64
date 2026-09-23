@@ -65,18 +65,23 @@ def generate_launch_description():
             ),
            
             # Launch the ROS 2 Navigation Stack
+            # launch.actions.IncludeLaunchDescription(
+            #     PythonLaunchDescriptionSource(
+            #        os.path.join(nav2_launch_dir, "bringup_launch.py")  
+            #     ),
+            #     launch_arguments={
+            #         "use_sim_time": LaunchConfiguration("use_sim_time"),
+            #         "params_file": LaunchConfiguration("params_file"),
+            #         "autostart": LaunchConfiguration("autostart"),
+            #         "use_intra_process_comms": LaunchConfiguration("use_intra_process_comms"),
+            #         "use_localization": LaunchConfiguration("use_localization"),
+
+            #     }.items(),
+            # ),
             launch.actions.IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                   os.path.join(nav2_launch_dir, "bringup_launch.py")  
-                ),
-                launch_arguments={
-                    "use_sim_time": LaunchConfiguration("use_sim_time"),
-                    "params_file": LaunchConfiguration("params_file"),
-                    "autostart": LaunchConfiguration("autostart"),
-                    "use_intra_process_comms": LaunchConfiguration("use_intra_process_comms"),
-                    "use_localization": LaunchConfiguration("use_localization"),
-
-                }.items(),
+                    os.path.join(get_package_share_directory("faucon_bringup"), "launch", "nav", "path_follower.launch.py")
+                )
             ),
             mission_manager_cmd,
         ]
