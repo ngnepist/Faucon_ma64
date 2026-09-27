@@ -62,7 +62,7 @@ from geographic_msgs.msg import GeoPoint
 # ============================================================================
 # Service de robot_localization permettant de convertir
 # plusieurs coordonnées Latitude/Longitude/Altitude en coordonnées cartésiennes locales.
-from robot_localization.srv import FromLLArray
+from robot_localization.srv import FromLLArray, ToLL
 from std_srvs.srv import Trigger
 #  custom FollowPath action is used to avoid dependency on nav2_msgs package
 from faucon_interfaces.action import NavigateFauconMission
@@ -89,11 +89,9 @@ from mission_core import (State, validate_waypoints, nearest_wp_index)
 # QoS "LATCHED"
 # ============================================================================
 # Ce QoS permet à un nouveau subscriber de récupérer la dernière valeur publiée.
-#
 # C'est particulièrement utile pour :
 #   - /gnss/datum
 #   - /mission/path
-#
 # TRANSIENT_LOCAL :
 # le publisher conserve la dernière valeur.
 #
@@ -157,6 +155,9 @@ class MissionManager(Node):
         # Chemin complet après conversion GPS → ENU et densification.
         # Il s'agit d'un nav_msgs/Path.
         self._full_path: Optional[Path] = None
+        self._gps_path_points = []
+        self._gps_path_index = 0
+
         # Nombre total de waypoints.
         self._total_wp = 0
         # Index du waypoint actuellement considéré comme atteint.
@@ -196,19 +197,17 @@ class MissionManager(Node):
         # SERVICES
         # ====================================================================
         # Client du service robot_localization :
-        #     /fromLLArray
+        #     /fromLLArray (resp. /toLL)
         # Ce service convertit des coordonnées :
-        #     Latitude / Longitude / Altitude
+        #     Latitude / Longitude / Altitude (resp. x,y z)
         # en :
-        #     x / y / z
+        #     x / y / z (resp. Latitude, Longitude, Altitude)
         # dans le repère local.
         self._fromll = self.create_client(FromLLArray, "/fromLLArray")
-        # Timer utilisé lorsqu'on doit attendre que le service
-        # /fromLLArray soit disponible.
+        self._to_ll_client = self.create_client(ToLL, "/toLL")
+        # Timer utilisé lorsqu'on doit attendre que le service /fromLLArray soit disponible.
         self._fromll_retry_timer = None
-        self._srv_near_mission_start = self.create_service(
-            Trigger,
-            "/is_robot_near_mission_start",
+        self._srv_near_mission_start = self.create_service(Trigger,"/is_robot_near_mission_start",
             self._on_is_robot_near_mission_start,
         )
 
@@ -225,6 +224,7 @@ class MissionManager(Node):
         # ====================================================================
         self._pub_status = self.create_publisher(String, "/mission/status", 10)
         self._pub_path = self.create_publisher(Path, "/mission/path", LATCHED_QOS)
+        self._pub_path_gps = self.create_publisher(String, "/mission/path_gps", LATCHED_QOS,)
 
         # ====================================================================
         # TIMERS
@@ -249,9 +249,7 @@ class MissionManager(Node):
         # On ne fait cette opération qu'une seule fois.
         if not self._datum_ready:
             self._datum_ready = True
-            self.get_logger().info(
-                "Datum GNSS reçu - conversions GPS→ENU disponibles."
-            )
+            self.get_logger().info("Datum GNSS reçu - conversions GPS→ENU disponibles.")
 
     # ========================================================================
     # CALLBACK ODOMÉTRIE
@@ -343,8 +341,7 @@ class MissionManager(Node):
     # =========================================================================
     def _cmd_start(self) -> None:
         """
-        Démarre la mission.
-        START n'est accepté que lorsque la mission est READY.
+        Démarre la mission. START n'est accepté que lorsque la mission est READY.
         """
         # Vérification de l'état.
         if self._state != State.READY:
@@ -626,28 +623,38 @@ class MissionManager(Node):
         """
         Traite la réponse du service /fromLLArray.
         """
+
         try:
             # Récupération de la réponse.
             resp = future.result()
         except Exception as e:
             # Une erreur de service met la mission en ERROR.
             return self._set_error(f"Erreur /fromLLArray: {e}")
+
         # Les points convertis sont maintenant des coordonnées locales.
         pts: List[Point] = resp.map_points
         # Vérification importante : on doit recevoir exactement autant de points que de waypoints envoyés.
         if len(pts) != self._total_wp:
             return self._set_error(f"/fromLLArray: {len(pts)} points reçus pour {self._total_wp} attendus")
+
         # sauvegarde des points de mission convertis.
         self._mission_points = list(pts)
         # Construction du nav_msgs/Path.
         self._full_path = self._make_path(pts)
+
+
         self._mission_total_distance = self._path_length(self._full_path)
         self._distance_remaining = self._mission_total_distance
         self._mission_start_point = self._full_path.poses[0]
+
         # Publication du chemin complet.
         self._pub_path.publish(self._full_path)
+        # publication de la version gps à l'IHM
+        self._publish_path_gps()
+
         # La mission est maintenant prête.
         self._transition(State.READY)
+
         # Affichage du premier point pour information.
         p0 = self._full_path.poses[0].pose.position
         self.get_logger().info(f"[{self._mission_id}] Chemin ENU prêt — {self._total_wp} WP. Origine: x={p0.x:.2f}, y={p0.y:.2f}. Envoyez START.")
@@ -710,6 +717,52 @@ class MissionManager(Node):
         path.poses.append(ps)
         self.get_logger().info(f"Path Nav2 densifié : {len(pts)} waypoints → {len(path.poses)} poses")
         return path
+
+    # =========================================================================
+    # PUBLICATION DU PATH DENSIFIÉ À L'IHM POUR AFFICHAGE
+    # =========================================================================
+    def _publish_path_gps(self) -> None:
+        if self._full_path is None or not self._full_path.poses:
+            self.get_logger().warn("Impossible de convertir le path GPS : path vide.")
+            return
+        if not self._to_ll_client.service_is_ready():
+            self.get_logger().warn("Service /toLL indisponible.")
+            return
+
+        self._gps_path_points = []
+        self._gps_path_index = 0
+        self.get_logger().info(f"Conversion du path densifié vers GPS : {len(self._full_path.poses)} poses.")
+        self._convert_next_path_pose()
+
+    def _convert_next_path_pose(self) -> None:
+        if self._full_path is None:
+            return
+        if self._gps_path_index >= len(self._full_path.poses):
+            self._finish_path_gps_conversion()
+            return
+
+        pose = self._full_path.poses[self._gps_path_index].pose.position
+        req = ToLL.Request()
+        req.map_point.x = pose.x
+        req.map_point.y = pose.y
+        req.map_point.z = pose.z
+        future = self._to_ll_client.call_async(req)
+        future.add_done_callback(self._on_to_ll_response)
+
+    def _on_to_ll_response(self, future) -> None:
+        try:
+            response = future.result()
+            self._gps_path_points.append({"lat": response.ll_point.latitude, "lon": response.ll_point.longitude,"alt": response.ll_point.altitude,})
+            self._gps_path_index += 1
+            self._convert_next_path_pose()
+        except Exception as e:
+            self.get_logger().error(f"Erreur pendant la conversion /toLL : {e}")
+
+    def _finish_path_gps_conversion(self) -> None:
+        msg = String()
+        msg.data = json.dumps({"mission_id": self._mission_id, "points": self._gps_path_points,})
+        self._pub_path_gps.publish(msg)
+        self.get_logger().info(f"Path GPS publié : {len(self._gps_path_points)} points.")
 
     # =========================================================================
     # EXÉCUTION NAV2

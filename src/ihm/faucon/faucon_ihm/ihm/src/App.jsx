@@ -449,6 +449,8 @@ function GPSWidget({ subscribe }) {
   const mapDivRef = useRef(null);      // DOM div
   const markerRef = useRef(null);      // robot marker
   const polylineRef = useRef(null);    // trail polyline
+  const missionPolylineRef = useRef(null); // Reference mission polyline
+  const missionArrowRef = useRef(null);
   const initializedRef = useRef(false);
   const firstFlyRef = useRef(false);
 
@@ -500,6 +502,7 @@ function GPSWidget({ subscribe }) {
 
       markerRef.current = window.L.marker([43.9, 3.2], { icon: robotIcon }).addTo(map);
       polylineRef.current = window.L.polyline([], { color: "#00ff9d", weight: 2, opacity: 0.7 }).addTo(map);
+      missionPolylineRef.current = window.L.polyline([], {color: "#ffb347", weight: 3, opacity: 0.9,dashArray: "8, 6"}).addTo(map);
       mapRef.current = map;
     };
 
@@ -529,6 +532,53 @@ function GPSWidget({ subscribe }) {
       const pos = { lat: msg.latitude, lon: msg.longitude, alt: msg.altitude ?? 0, fix: msg.status?.status >= 0 };
       setGpsData(pos);
       setTrail(prev => [...prev.slice(-500), pos]);
+    });
+    return unsub;
+  }, [subscribe]);
+
+  // to add arrow on the mission traj
+  const updateMissionArrow = (latlngs) => {
+  if (!mapRef.current || latlngs.length < 2) return;
+
+  if (missionArrowRef.current) {
+    mapRef.current.removeLayer(missionArrowRef.current);
+    missionArrowRef.current = null;
+  }
+
+  const p1 = latlngs[latlngs.length - 2];
+    const p2 = latlngs[latlngs.length - 1];
+    const dx = p2[1] - p1[1];
+    const dy = p2[0] - p1[0];
+    const length = Math.sqrt(dx * dx + dy * dy);
+    if (length === 0) return;
+    const ux = dx / length;
+    const uy = dy / length;
+    const arrowLength = length * 2.0;
+    const arrowWidth = arrowLength * 0.5;
+    const left = [p2[0] - uy * arrowLength + ux * arrowWidth, p2[1] - ux * arrowLength - uy * arrowWidth];
+    const right = [p2[0] - uy * arrowLength - ux * arrowWidth, p2[1] - ux * arrowLength + uy * arrowWidth];
+    missionArrowRef.current = window.L.polyline( [left, p2, right], {color: "#ffb347", weight: 3, opacity: 0.9}).addTo(mapRef.current);
+  };
+
+  // Subscribe to mission path gps
+  useEffect(() => {
+    const unsub = subscribe("/mission/path_gps", "std_msgs/String", (msg) => {
+      try {
+        const data = JSON.parse(msg.data);
+        if (!Array.isArray(data.points) || data.points.length === 0) {
+          return;
+        }
+        const latlngs = data.points.map(point => [point.lat, point.lon]);
+        if (missionPolylineRef.current) {
+          missionPolylineRef.current.setLatLngs(latlngs);
+        }
+        updateMissionArrow(latlngs);
+        if (mapRef.current) {
+          mapRef.current.fitBounds(latlngs, {padding: [30, 30]});
+        }
+      } catch (err) {
+        console.error("Erreur /mission/path_gps :", err);
+      }
     });
     return unsub;
   }, [subscribe]);
