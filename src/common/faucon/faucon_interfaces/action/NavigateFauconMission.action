@@ -1,0 +1,11 @@
+# Goal
+nav_msgs/Path mission_path
+---
+# Result
+bool success
+uint16 error_code
+string message
+---
+# Feedback
+float32 distance_remaining
+bool restarting

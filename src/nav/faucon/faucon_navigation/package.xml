@@ -5,19 +5,30 @@
   <version>0.0.0</version>
   <description>Navigation package for the Faucon mobile robot, including Nav2 configuration and GPS path helpers.</description>
   <maintainer email="kleinfy51@gmail.com">klein</maintainer>
+  <maintainer email="sngnepiepayewembe@gmail.com">Stephane NGNEPIEPAYE WEMBE</maintainer>
   <license>MIT</license>
+
+  <depend>ament_cmake</depend>
+  <depend>rclcpp</depend>
+  <depend>nav2_core</depend>
+  <depend>nav2_behavior_tree</depend>
+  <depend>nav2_util</depend>
+  <depend>nav_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>faucon_interfaces</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>sensor_msgs</depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>ament_index_python</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>nav2_msgs</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
+
   <exec_depend>python3-yaml</exec_depend>
   <exec_depend>python3-pyproj</exec_depend>
+
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

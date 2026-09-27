@@ -1,0 +1,7 @@
+<library path="faucon_mission_navigator">
+  <class
+    type="faucon_navigation::FauconMissionNavigator"
+    base_class_type="nav2_core::NavigatorBase">
+    <description>Navigator for Faucon agricultural missions.</description>
+  </class>
+</library>

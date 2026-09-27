@@ -1,0 +1,59 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+
+    <Sequence name="FauconMission">
+
+      <FindClosestMissionPose
+        mission_path="{mission_path}"
+        global_frame="map"
+        robot_base_frame="base_link"
+        closest_pose="{closest_pose}"
+        closest_index="{closest_index}"/>
+
+      <SelectMissionEntryPose
+        mission_path="{mission_path}"
+        closest_index="{closest_index}"
+        end_restart_distance="1.0"
+        entry_pose="{entry_pose}"
+        entry_index="{entry_index}"/>
+
+      <Fallback name="CheckOrRejoinMission">
+
+        <RobotReadyToFollowMission
+          target_pose="{entry_pose}"
+          global_frame="map"
+          robot_base_frame="base_link"
+          distance_threshold="{entry_distance_threshold}"
+          yaw_threshold="{entry_yaw_threshold}"/>
+
+        <Sequence name="RejoinMission">
+
+          <ComputePathToPose
+            goal="{entry_pose}"
+            path="{rejoin_path}"
+            planner_id="GridBased"
+            error_code_id="{compute_path_error_code}"/>
+
+          <FollowPath
+            path="{rejoin_path}"
+            controller_id="FollowPath"
+            error_code_id="{follow_path_error_code}"/>
+
+        </Sequence>
+
+      </Fallback>
+
+      <ExtractRemainingPath
+        mission_path="{mission_path}"
+        entry_index="{entry_index}"
+        remaining_path="{remaining_path}"/>
+
+      <FollowPath
+        path="{remaining_path}"
+        controller_id="FollowPath"
+        error_code_id="{follow_path_error_code}"/>
+
+    </Sequence>
+
+  </BehaviorTree>
+</root>

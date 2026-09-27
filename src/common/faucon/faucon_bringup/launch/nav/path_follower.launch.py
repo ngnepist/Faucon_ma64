@@ -16,6 +16,28 @@ def generate_launch_description():
     )
 
     # ========================================================
+    # bt_navigator
+    # ========================================================
+    bt_navigator = Node(
+    package="nav2_bt_navigator",
+    executable="bt_navigator",
+    name="bt_navigator",
+    output="screen",
+    parameters=[params_file],
+    )
+
+    # ========================================================
+    # Planner Server
+    # ========================================================
+    planner_server = Node(
+        package="nav2_planner",
+        executable="planner_server",
+        name="planner_server",
+        output="screen",
+        parameters=[params_file],
+    )
+
+    # ========================================================
     # Controller Server
     # ========================================================
     controller_server = Node(
@@ -58,6 +80,8 @@ def generate_launch_description():
                 "use_sim_time": True,
                 "autostart": True,
                 "node_names": [
+                    "bt_navigator",
+                    "planner_server",
                     "controller_server",
                     "velocity_smoother"
                 ]
@@ -66,6 +90,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        bt_navigator,
+        planner_server,
         controller_server,
         velocity_smoother,
         lifecycle_manager,

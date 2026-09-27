@@ -7,23 +7,30 @@
   <maintainer email="sngnepiepayewembe@gmail.com">NGNEPIEPAYE WEMBE Stephane</maintainer>
   <license>FAUCON</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>action_msgs</depend>
   <depend>ament_cmake</depend>
   <depend>ament_cmake_python</depend>
   <depend>ament_index_python</depend>
   <depend>ament_lint_auto</depend>
   <depend>ament_lint_common</depend>
+  <depend>behaviortree_cpp</depend>
   <depend>controller_manager</depend>
   <depend>faucon_control</depend>
   <depend>faucon_ihm</depend>
+  <depend>faucon_interfaces</depend>
   <depend>faucon_perception</depend>
   <depend>geometry_msgs</depend>
   <depend>gz_ros2_control</depend>
   <depend>joint_state_publisher</depend>
   <depend>launch</depend>
   <depend>launch_ros</depend>
+  <depend>nav2_behavior_tree</depend>
   <depend>nav2_bringup</depend>
+  <depend>nav2_core</depend>
   <depend>nav2_msgs</depend>
+  <depend>nav2_util</depend>
   <depend>nav_msgs</depend>
+  <depend>pluginlib</depend>
   <depend>python3-jinja2</depend>
   <depend>python3-matplotlib</depend>
   <depend>python3-opencv</depend>
@@ -45,9 +52,15 @@
   <depend>ros_gz_sim</depend>
   <depend>rosapi</depend>
   <depend>rosbridge_server</depend>
+  <depend>rosidl_default_generators</depend>
+  <depend>rosidl_default_runtime</depend>
   <depend>rviz2</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
   <depend>trajectory_msgs</depend>
   <depend>twist_mux</depend>
   <depend>virtual_maize_field</depend>
